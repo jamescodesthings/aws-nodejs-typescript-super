@@ -5,14 +5,25 @@
   "main": "handler.js",
   "scripts": {
     "pin-dependencies": "npx npm-pin-dependencies",
+    "lint:check": "eslint --ext ts .",
+    "lint:fix": "eslint --ext --fix .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "middy": "0.28.4",
     "source-map-support": "0.5.12"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.30",
     "@types/node": "10.14.13",
+    "@typescript-eslint/eslint-plugin": "1.12.0",
+    "@typescript-eslint/parser": "1.12.0",
+    "eslint": "6.0.1",
+    "eslint-config-prettier": "6.0.0",
+    "eslint-plugin-prettier": "3.1.0",
+    "prettier": "1.18.2",
+    "serverless": "1.47.0",
+    "serverless-offline": "5.8.0",
     "serverless-webpack": "5.3.1",
     "ts-loader": "5.4.5",
     "typescript": "3.5.3",
