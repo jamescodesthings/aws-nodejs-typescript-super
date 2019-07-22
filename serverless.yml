@@ -19,7 +19,7 @@ provider:
     Department: Platforms
     Framework: Serverless
   apiKeys:
-    - ${self:service}-${opt:stage, self:provider.stage}-key
+    - ${self:service}-${self:provider.stage}-key
   vpc:
     securityGroupIds:
       - ${self:provider.environment.SECURITY_GROUP}
