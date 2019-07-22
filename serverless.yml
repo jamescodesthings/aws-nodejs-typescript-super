@@ -1,25 +1,64 @@
 service:
   name: batch
-#app: your-app-name
-#tenant: your-tenant-name
 
-# Add the serverless-webpack plugin
+frameworkVersion: '>=1.0.0 <2.0.0'
+
 plugins:
   - serverless-webpack
+  - serverless-prune-plugin
   - serverless-offline
+  - serverless-domain-manager
 
 provider:
   name: aws
   runtime: nodejs10.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'eu-west-1'}
+  deploymentBucket: serverless.${self:provider.region}.${self:provider.stage}.packt
+  stackTags:
+    Department: Platforms
+    Framework: Serverless
+  apiKeys:
+    - ${self:service}-${opt:stage, self:provider.stage}-key
+  vpc:
+    securityGroupIds:
+      - ${self:provider.environment.SECURITY_GROUP}
+    subnetIds:
+      - ${self:provider.environment.VPC_SUBNET_1}
+  environment:
+    SECURITY_GROUP: 'Temporary_nonsense'
+    VPC_SUBNET_1: 'Temporary_nonsense'
+
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+        - lambda:InvokeAsync
+      Resource: "*"
 
 custom:
   webpack:
     webpackConfig: 'webpack.config.ts'
+  domains:
+    sandbox: "services-sandbox.packtpub.com"
+    dev: "services-dev.packtpub.com"
+    staging: "services-staging.packtpub.com"
+    prod: "services.packtpub.com"
+  customDomain:
+    domainName: ${self:custom.domains.${self:provider.stage}}
+    basePath: ${self:service}
+    stage: ${self:provider.stage}
+    createRoute53Record: false
+  prune:
+    automatic: true
+    number: 3
 
 functions:
   hello:
-    handler: handler.hello
+    handler: src/handlers/handler.hello
     events:
       - http:
           method: get
           path: hello
+

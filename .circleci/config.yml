@@ -1,0 +1,178 @@
+version: 2.1
+
+commands:
+  npmg:
+    description: "Latest version of NPM"
+    steps:
+      - run:
+          name: "Latest version of NPM"
+          command: sudo npm i -g npm serverless @packt/serverless-env-generator
+  npmi:
+    description: "Install node dependencies"
+    steps:
+      - run:
+          name: "Install node dependencies"
+          command: npm i
+  slsenv:
+    description: "Build the serverless.env.yml"
+    parameters:
+      stage:
+        type: string
+        default: "prod"
+    steps:
+      - run:
+          name: "Build the serverless.env.yml"
+          command: serverless-env-generator --env-variables=./serverless-envs.json --stage=<< parameters.stage >>
+  buildversion:
+    description: "Build the version.json"
+    steps:
+      - run:
+          name: "Build the version.json"
+          command: npm run build:version
+  load:
+    description: "Configure and build objects for deployment"
+    parameters:
+      stage:
+        type: string
+        default: "prod"
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "4c:3b:c2:b3:71:6a:40:df:7b:b7:c1:4a:d8:f8:a5:24"
+      - checkout
+      - npmg
+      - restore_cache:
+          keys:
+            - v1-dependency-cache-{{ checksum "package.json" }}
+            - v1-dependency-cache-
+      - npmi
+      - slsenv:
+          stage: << parameters.stage >>
+      - buildversion
+  deploy:
+    description: "Deploy to AWS"
+    parameters:
+      stage:
+        type: string
+        default: "prod"
+    steps:
+      - run:
+          name: Run deployment script
+          command: sls deploy --stage << parameters.stage >> --verbose
+      - run:
+          name: Run database migration
+          command: sls invoke -f db-migrate-up --stage << parameters.stage >> --verbose
+
+
+jobs:
+  build:
+    docker:
+      - image: circleci/node:8.10
+        environment:
+          - DB_USER: testName
+          - DB_PASSWORD: testPass
+          - DB_NAME: testDb
+          - DB_HOST: localhost
+      - image: circleci/postgres:9.5-alpine
+        environment:
+          - POSTGRES_DB: testDb
+          - POSTGRES_USER: testName
+          - POSTGRES_PASSWORD: testPass
+    steps:
+      - load:
+          stage: "dev"
+      - save_cache:
+          key: v1-dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: Database Setup
+          command: npm run db:setup
+      - run:
+          name: Test
+          command: npm test
+      - store_artifacts:
+          path: ./coverage/
+
+  deploy-develop:
+    docker:
+      - image: circleci/node:8.10
+    steps:
+      - load:
+          stage: "dev"
+      - run:
+          name: Set the AWS environment
+          command: |
+            [ -z "$DEV_AWS_ACCESS_KEY_ID" ] && echo "Need to set DEV_AWS_ACCESS_KEY_ID" && exit 1;
+            [ -z "$DEV_AWS_SECRET_ACCESS_KEY" ] && echo "Need to set DEV_AWS_SECRET_ACCESS_KEY" && exit 1;
+            sls config credentials -o --provider aws --key ${DEV_AWS_ACCESS_KEY_ID} --secret ${DEV_AWS_SECRET_ACCESS_KEY}
+      - deploy:
+          stage: "dev"
+
+  deploy-staging:
+    docker:
+      - image: circleci/node:8.10
+    steps:
+      - load:
+          stage: "staging"
+      - run:
+          name: Set the AWS environment
+          command: |
+            [ -z "$STAGING_AWS_ACCESS_KEY_ID" ] && echo "Need to set STAGING_AWS_ACCESS_KEY_ID" && exit 1;
+            [ -z "$STAGING_AWS_SECRET_ACCESS_KEY" ] && echo "Need to set STAGING_AWS_SECRET_ACCESS_KEY" && exit 1;
+            sls config credentials -o --provider aws --key ${STAGING_AWS_ACCESS_KEY_ID} --secret ${STAGING_AWS_SECRET_ACCESS_KEY} --stage staging
+      - deploy:
+          stage: "staging"
+
+  deploy-prod:
+    docker:
+      - image: circleci/node:8.10.0
+    steps:
+      - load:
+          stage: "prod"
+      - run:
+          name: Set the AWS environment
+          command: |
+            [ -z "$PROD_AWS_ACCESS_KEY_ID" ] && echo "Need to set PROD_AWS_ACCESS_KEY_ID" && exit 1;
+            [ -z "$PROD_AWS_SECRET_ACCESS_KEY" ] && echo "Need to set PROD_AWS_SECRET_ACCESS_KEY" && exit 1;
+            sls config credentials -o --provider aws --key ${PROD_AWS_ACCESS_KEY_ID} --secret ${PROD_AWS_SECRET_ACCESS_KEY} --stage prod
+      - deploy:
+          stage: "prod"
+
+workflows:
+  version: 2
+  # The build and deploy workflow
+  build_and_deploy:
+    jobs:
+      - build
+      # The deploy job will only run on the branches specified and require the
+      # build job to be successful before it starts
+      - deploy-develop:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - develop
+      - deploy-staging:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - staging
+      - hold-prod-release:
+          type: approval
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - master
+      - deploy-prod:
+          requires:
+            - hold-prod-release
+          filters:
+            branches:
+              only:
+                - master

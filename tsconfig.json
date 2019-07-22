@@ -1,5 +1,4 @@
 {
-  "compileOnSave": true,
   "compilerOptions": {
     "lib": ["es2017"],
     "module": "commonjs",
