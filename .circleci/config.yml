@@ -2,11 +2,14 @@ version: 2.1
 
 commands:
   npmg:
-    description: "Latest version of NPM"
+    description: "Update NPM and Install Global Dependencies"
     steps:
       - run:
-          name: "Latest version of NPM"
-          command: sudo npm i -g npm serverless @packt/serverless-env-generator
+          name: "Update NPM"
+          command: sudo npm i -g npm@latest
+      - run:
+          name: "Install Global Dependencies"
+          command: sudo npm i -g serverless @packt/serverless-env-generator
   npmi:
     description: "Install node dependencies"
     steps:
@@ -67,7 +70,7 @@ commands:
 jobs:
   build:
     docker:
-      - image: circleci/node:8.10
+      - image: circleci/node:10
         environment:
           - DB_USER: testName
           - DB_PASSWORD: testPass
@@ -96,7 +99,7 @@ jobs:
 
   deploy-develop:
     docker:
-      - image: circleci/node:8.10
+      - image: circleci/node:10
     steps:
       - load:
           stage: "dev"
@@ -111,7 +114,7 @@ jobs:
 
   deploy-staging:
     docker:
-      - image: circleci/node:8.10
+      - image: circleci/node:10
     steps:
       - load:
           stage: "staging"
@@ -126,7 +129,7 @@ jobs:
 
   deploy-prod:
     docker:
-      - image: circleci/node:8.10.0
+      - image: circleci/node:10.0
     steps:
       - load:
           stage: "prod"
