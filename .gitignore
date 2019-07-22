@@ -1,4 +1,9 @@
-lib/
+# Ignore transpiled (build) files
+*.js
+*.js.map
+
+# Un-ignore top-level dot-file js files (.eslintrc.js, etc.)
+!.*.js
 
 # package directories
 node_modules

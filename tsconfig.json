@@ -1,13 +1,17 @@
 {
+  "compileOnSave": true,
   "compilerOptions": {
     "lib": ["es2017"],
+    "module": "commonjs",
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "sourceMap": true,
     "target": "es2017",
-    "esModuleInterop": true,
-    "outDir": "lib"
+    "esModuleInterop": true
   },
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
+  ]
 }
