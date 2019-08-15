@@ -5,6 +5,9 @@
 # Un-ignore top-level dot-file js files (.eslintrc.js, etc.)
 !.*.js
 
+# Un-ignore plain-js scripts
+!scripts/**/*.js
+
 # package directories
 node_modules
 jspm_packages

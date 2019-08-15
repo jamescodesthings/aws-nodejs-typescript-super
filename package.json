@@ -11,27 +11,30 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "middy": "0.28.4",
-    "source-map-support": "0.5.12"
+    "middy": "0.29.0",
+    "source-map-support": "0.5.13"
   },
   "devDependencies": {
+    "@packt/serverless-plugin-package": "1.0.11",
     "@types/aws-lambda": "8.10.30",
     "@types/node": "10.14.13",
-    "@types/webpack": "4.4.35",
-    "@typescript-eslint/eslint-plugin": "1.12.0",
-    "@typescript-eslint/parser": "1.12.0",
-    "eslint": "6.0.1",
+    "@types/semver": "6.0.1",
+    "@types/webpack": "4.32.1",
+    "@typescript-eslint/eslint-plugin": "2.0.0",
+    "@typescript-eslint/parser": "2.0.0",
+    "eslint": "6.1.0",
     "eslint-config-prettier": "6.0.0",
     "eslint-plugin-prettier": "3.1.0",
     "prettier": "1.18.2",
-    "serverless": "1.47.0",
-    "serverless-domain-manager": "^3.2.6",
-    "serverless-offline": "5.8.0",
-    "serverless-prune-plugin": "^1.3.2",
+    "semver": "6.2.0",
+    "serverless": "1.50.0",
+    "serverless-domain-manager": "3.3.0",
+    "serverless-offline": "5.10.1",
+    "serverless-prune-plugin": "1.4.0",
     "serverless-webpack": "5.3.1",
     "ts-loader": "6.0.4",
     "typescript": "3.5.3",
-    "webpack": "4.36.1"
+    "webpack": "4.39.2"
   },
   "author": "The serverless webpack authors (https://github.com/elastic-coders/serverless-webpack)",
   "license": "MIT"

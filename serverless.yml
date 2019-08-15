@@ -1,25 +1,27 @@
 service:
-  name: batch
+  name: ${package:name}-${package:semver.major}
+
 
 frameworkVersion: '>=1.0.0 <2.0.0'
 
 plugins:
   - serverless-webpack
   - serverless-prune-plugin
+  - "@packt/serverless-plugin-package"
   - serverless-offline
   - serverless-domain-manager
 
 provider:
   name: aws
   runtime: nodejs10.x
-  stage: ${opt:stage, 'dev'}
+  stage: ${self:custom.stage}
   region: ${opt:region, 'eu-west-1'}
-  deploymentBucket: serverless.${self:provider.region}.${self:provider.stage}.packt
+  deploymentBucket: serverless.${self:provider.region}.${self:custom.stage}.packt
   stackTags:
     Department: Platforms
     Framework: Serverless
   apiKeys:
-    - ${self:service}-${self:provider.stage}-key
+    - ${self:service}-${self:custom.stage}-key
   vpc:
     securityGroupIds:
       - ${self:provider.environment.SECURITY_GROUP}
@@ -46,13 +48,19 @@ custom:
     staging: "services-staging.packtpub.com"
     prod: "services.packtpub.com"
   customDomain:
-    domainName: ${self:custom.domains.${self:provider.stage}}
+    domainName: ${self:custom.domains.${self:custom.stage}}
     basePath: ${self:service}
     stage: ${self:provider.stage}
     createRoute53Record: false
   prune:
     automatic: true
     number: 3
+  branch: ${env:CIRCLE_BRANCH, 'develop'}
+  stage: ${self:custom.branchMap.${self:custom.branch}, 'local'}
+  branchMap:
+    develop: 'dev'
+    staging: 'staging'
+    master: 'prod'
 
 functions:
   hello:
